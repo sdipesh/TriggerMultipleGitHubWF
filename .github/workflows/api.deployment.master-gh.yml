@@ -1,0 +1,80 @@
+name: GH - Master Deployment Pipeline
+
+# Run this workflow every time a commit gets pushed to main or a pull request gets opened against main
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target Environment'
+        type: choice
+        required: true
+        options:
+        - select-environment
+        - development
+        - qa 
+        - stage
+        - perf        
+        - prod
+      deployment_file:
+        description: 'Deployment File Name'
+        type: string
+        required: true
+      branch_name:
+        description: 'Branch name for package json version'
+        type: string
+        required: true
+jobs:
+  read_deployment_file:
+    name: Reading Deployment File
+    runs-on: ubuntu-latest
+    outputs:
+        matrix: ${{ steps.read_file_contents.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2    
+      - id: read_file_contents
+        name: Read File Contents
+        run: |
+          #Validate user has selected target environment
+          if [ '${{ github.event.inputs.target_env }}' == 'select-environment' ]; then
+            echo "Please select target environment"
+            exit 1
+          else
+            content=`cat ./${{ github.event.inputs.target_env }}/${{ github.event.inputs.deployment_file }}`
+            # the following lines are only required for multi line json
+            content="${content//'%'/'%25'}"
+            content="${content//$'\n'/'%0A'}"
+            content="${content//$'\r'/'%0D'}"
+            # end of optional handling for multi line json
+            echo $content
+            echo "::set-output name=matrix::$content"
+          fi
+              
+  deployment:    
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.target_env }}
+    needs: [read_deployment_file]
+    strategy:
+      matrix: ${{fromJSON(needs.read_deployment_file.outputs.matrix)}}
+    steps:
+    - id: trigger-pipeline
+      name: Execute
+      run: |
+        #if user has not provided version in input json file
+        if [ -z "${{ matrix.version }}" ]; then
+          #Retrieve package json version from the branch 
+          PACKAGE_JSON_VERSION=$(curl -H "Authorization: Bearer ${{ secrets.GH_BEARER_TOKEN }}" -H "Content-Type: application/json" "https://api.github.com/repos/${{ matrix.reponame }}/contents/package.json?ref=${{ github.event.inputs.branch_name }}" | jq -r ".content" | base64 --decode | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g')
+          PACKAGE_JSON_VERSION=`echo $PACKAGE_JSON_VERSION | sed 's/ *$//g'`
+          echo "Using ${{ github.event.inputs.branch_name }} - package.json version:" $PACKAGE_JSON_VERSION
+          
+          #Prepare image tag from the retrieved package json version
+          IMAGE_TAG=v
+          IMAGE_TAG+=$PACKAGE_JSON_VERSION
+
+          echo -e "\e[1;33m Deploy has been triggered for ${{ matrix.reponame }} on ${{ github.event.inputs.target_env }} with the Version: $IMAGE_TAG \e[0m"
+          content=$(curl -H "Authorization: Bearer ${{ secrets.GH_BEARER_TOKEN }}" -H "Content-Type: application/json" -X POST -d '{"event_type": "api_deployment/${{ github.event.inputs.target_env }}-$IMAGE_TAG","client_payload": {"environment_name": "${{ github.event.inputs.target_env }}","deployment_tag": "$IMAGE_TAG"}}' "https://api.github.com/repos/${{ matrix.reponame }}/dispatches")         
+        else              
+          echo -e "\e[1;33m Deploy has been triggered for ${{ matrix.reponame }} on ${{ github.event.inputs.target_env }} with the Version: ${{ matrix.version }} \e[0m"
+          content=$(curl -H "Authorization: Bearer ${{ secrets.GH_BEARER_TOKEN }}" -H "Content-Type: application/json" -X POST -d '{"event_type": "api_deployment/${{ github.event.inputs.target_env }}-${{ matrix.version }}","client_payload": {"environment_name": "${{ github.event.inputs.target_env }}","deployment_tag": "${{ matrix.version }}"}}' "https://api.github.com/repos/${{ matrix.reponame }}/dispatches")
+        fi
+        echo -e "\e[1;36m Check run status at https://github.com/${{ matrix.reponame }}/actions \e[0m"        

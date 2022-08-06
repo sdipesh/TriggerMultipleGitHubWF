@@ -1,0 +1,6 @@
+{
+  "include": [
+    { "reponame": "cantire-corp/reponame" },
+    { "reponame": "cantire-corp/reponame", "version": "vX.X.X" }
+  ]
+}
