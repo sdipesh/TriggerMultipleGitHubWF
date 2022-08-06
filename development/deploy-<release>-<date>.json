@@ -1,6 +1,24 @@
 {
   "include": [
-    { "reponame": "cantire-corp/reponame" },
-    { "reponame": "cantire-corp/reponame", "version": "vX.X.X" }
+    { "reponame": "cantire-corp/reponame1", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame2", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame3", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame4", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame5", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame6", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame7", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame8", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame9", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame10", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame11", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame12", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame13", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame14", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame15", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame16", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame17", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame18", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame19", "version": "vX.X.X" },
+    { "reponame": "cantire-corp/reponame20", "version": "vX.X.X" }
   ]
 }
